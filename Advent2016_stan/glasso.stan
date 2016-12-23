@@ -7,24 +7,15 @@ data {
 parameters {
   corr_matrix[P] Lambda; // Covariance matrix
 }
-#transformed parameters {
-#  matrix[P, P] Lambda;
-#  Lambda = inverse(Sigma);
-#}
 model {
   vector[P] zeros;
   for (i in 1:P) {
      zeros[i] = 0;
   }
-  
+
   // Precision matrix follows laplace distribution
   to_vector(Lambda) ~ double_exponential(0, 1/alpha);
-  #for (i in 1:P){
-  #  for (j in 1:P){
-  #    Lambda[i, j] ~ double_exponential(0, 1/alpha);
-  #  }
-  #}
-  
+
   for (j in 1:N){
     // X follows multi normal distribution
     X[j] ~ multi_normal(zeros, inverse(Lambda));
