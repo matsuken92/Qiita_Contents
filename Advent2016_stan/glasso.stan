@@ -2,25 +2,35 @@ data {
   int N;           // Sample size
   int P;           // Feature size
   matrix[N, P] X;  // Data
-  real alpha;      // L1 parameter
+  real alpha;      // scale parameter of double exponential (L1 parameter)
 }
 parameters {
-  corr_matrix[P] Sigma; // Covariance matrix
+  corr_matrix[P] Lambda; // Covariance matrix
 }
+#transformed parameters {
+#  matrix[P, P] Lambda;
+#  Lambda = inverse(Sigma);
+#}
 model {
   vector[P] zeros;
   for (i in 1:P) {
      zeros[i] = 0;
   }
+  
   // Precision matrix follows laplace distribution
-  to_vector(inverse(Sigma)) ~ double_exponential(0, alpha);
+  to_vector(Lambda) ~ double_exponential(0, 1/alpha);
+  #for (i in 1:P){
+  #  for (j in 1:P){
+  #    Lambda[i, j] ~ double_exponential(0, 1/alpha);
+  #  }
+  #}
   
   for (j in 1:N){
     // X follows multi normal distribution
-    X[j] ~ multi_normal(zeros, Sigma);   
+    X[j] ~ multi_normal(zeros, inverse(Lambda));
   }
 }
 generated quantities {
-  matrix[P, P] Lambda;
-  Lambda = inverse(Sigma);
+  matrix[P, P] Sigma;
+  Sigma = inverse(Lambda);
 }
